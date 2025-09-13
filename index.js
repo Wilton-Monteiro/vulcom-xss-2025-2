@@ -3,11 +3,14 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const app = express();
+const helmet = require('helmet');
 
 const db = new sqlite3.Database(':memory:');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
+
+app.use(helmet());
 
 // Criar tabela de comentários vulnerável
 db.serialize(() => {
@@ -16,12 +19,15 @@ db.serialize(() => {
 });
 
 // Middleware para gerar cookie de sessão
-app.use((req, res, next) => {
-    if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: true }); // VULNERÁVEL A XSS 🚨
-    }
-    next();
-});
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            objectSrc: ["'none'"],
+        },
+    })
+);
 
 // Rota principal
 app.get('/', (req, res) => {
