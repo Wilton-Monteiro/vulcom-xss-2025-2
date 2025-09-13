@@ -18,7 +18,7 @@ db.serialize(() => {
 // Middleware para gerar cookie de sessão
 app.use((req, res, next) => {
     if (!req.cookies.session_id) {
-        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: false }); // VULNERÁVEL A XSS 🚨
+        res.cookie('session_id', 'FLAG{XSS_SESSION_LEAK}', { httpOnly: true }); // VULNERÁVEL A XSS 🚨
     }
     next();
 });
@@ -34,6 +34,8 @@ app.get('/', (req, res) => {
 });
 
 // Rota para enviar comentários (VULNERÁVEL a XSS 🚨)
+
+
 app.post('/comment', (req, res) => {
     const { content } = req.body;
     db.run("INSERT INTO comments (content) VALUES (?)", [content], (err) => {
